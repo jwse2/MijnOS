@@ -1,0 +1,65 @@
+
+CC = cl
+AS = nasm
+CFLAGS = -nologo -MD -W3 -O2 -EHsc
+WFLAGS = -DNDEBUG
+ASFLAGS = -f bin -w+error
+
+DUMMIES = dmmy00.txt dmmy01.txt dmmy02.txt dmmy03.txt \
+    dmmy04.txt dmmy05.txt dmmy06.txt dmmy07.txt \
+    dmmy08.txt dmmy09.txt dmmy0A.txt dmmy0B.txt \
+    dmmy0C.txt dmmy0D.txt dmmy0E.txt dmmy0F.txt \
+    dmmy10.txt
+OBJS = kernel.bin cmd.bin ls.bin cls.bin notepad.bin
+OBJA = src\tools\writefloppy\io.cpp src\tools\writefloppy\utility.cpp src\tools\writefloppy\fs_raw.cpp src\tools\writefloppy\fs_fat12.cpp src\tools\writefloppy\main.cpp
+
+
+all: writefloppy2.exe image
+
+image: bootloader.bin $(OBJS)
+    bin\writefloppy2.exe -f -w bin -i msdos.bak -o bootdevice.flp -b bootloader.bin $(OBJS) $(DUMMIES)
+
+x86: x86.bin
+    bin\writeraw.exe -w bin -o bootdevice.flp x86.bin
+
+writefloppy:
+    $(CC) $(CFLAGS) $(WFLAGS) $(OBJA) /link -out:bin\writefloppy.exe
+
+writefloppy2:
+    $(CC) $(CFLAGS) $(WFLAGS) src\tools\writefloppy2\writefloppy2.cpp /link -out:bin\writefloppy2.exe
+
+writeraw:
+    $(CC) $(CFLAGS) $(WFLAGS) src\tools\writefloppy2\writeraw.cpp /link -out:bin\writeraw.exe
+
+bootloader.bin:
+    $(AS) $(ASFLAGS) -o bin\bootloader.bin src\bootloader.asm 
+
+kernel.bin:
+    $(AS) $(ASFLAGS) -o bin\kernel.bin src\kernel.asm 
+
+cmd.bin:
+    $(AS) $(ASFLAGS) -o bin\cmd.bin src\cmd.asm 
+
+cls.bin:
+    $(AS) $(ASFLAGS) -o bin\cls.bin src\cls.asm 
+
+ls.bin:
+    $(AS) $(ASFLAGS) -o bin\ls.bin src\ls.asm 
+
+notepad.bin:
+    $(AS) $(ASFLAGS) -o bin\notepad.bin src\notepad.asm 
+
+arkanoid.bin:
+    $(AS) $(ASFLAGS) -o bin\arkanoid.bin src\arkanoid.asm 
+
+classic: writefloppy.exe x86.bin
+    bin\writefloppy.exe -d bin -b x86.bin -o boot.flp
+
+x86.bin:
+    $(AS) $(ASFLAGS) -o bin\x86.bin src\x86.asm 
+
+clean:
+    -del /S *.obj
+    -del /S *.exe
+    -del /S *.bin
+    -del /S *.flp
